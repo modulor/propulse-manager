@@ -14,3 +14,4 @@ $routes->get('/auth/callback', 'Auth::callback');
 $routes->get('/auth/logout', 'Auth::logout');
 $routes->get('/dashboard', 'Dashboard::index');
 $routes->get('/dashboard/workspaces/(:segment)', 'Dashboard::workspaces/$1');
+$routes->get('/dashboard/workspace/(:segment)/(:segment)', 'Dashboard::workspace/$1/$2');

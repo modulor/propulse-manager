@@ -35,22 +35,27 @@ class Dashboard extends Controller
 
   public function workspaces($accountId)
   {
-    if (!session()->get('access_token')) {
-      return redirect()->to('/auth/login');
-    }
+    $frameio = new FrameioService();
+    $workspaces = $frameio->getWorkspaces($accountId);
 
-    try {
-      $frameio = new FrameioService();
-      $workspaces = $frameio->getWorkspaces($accountId);
+    $data = [
+      'account_id' => $accountId,
+      'workspaces' => $workspaces['data'] ?? []
+    ];
+  }
 
-      $data = [
-        'account_id' => $accountId,
-        'workspaces' => $workspaces['data'] ?? []
-      ];
+  public function workspace($accountId, $workspaceId)
+  {
+    $frameio = new FrameioService();
+    $projects = $frameio->getProjects($accountId, $workspaceId);
 
-      return view('workspaces', $data);
-    } catch (\Exception $e) {
-      return redirect()->to('/dashboard')->with('error', 'Error: ' . $e->getMessage());
-    }
+    $data = [
+      'workspace_id' => $workspaceId,
+      'projects' => $projects['data'] ?? []
+    ];
+
+    echo "<pre>";
+    print_r($data);
+    echo "</pre>";
   }
 }
