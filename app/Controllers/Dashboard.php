@@ -9,28 +9,22 @@ class Dashboard extends Controller
 {
   public function index()
   {
-    if (!session()->get('access_token')) {
-      return redirect()->to('/auth/login');
-    }
+    echo "dashboard";
 
-    try {
-      $frameio = new FrameioService();
+    $frameio = new FrameioService();
 
-      // Obtener información del usuario
-      $user = $frameio->getCurrentUser();
+    // Obtener información del usuario
+    $user = $frameio->getCurrentUser();
 
-      // Obtener cuentas
-      $accounts = $frameio->getAccounts();
+    // Obtener cuentas
+    $accounts = $frameio->getAccounts();
 
-      $data = [
-        'user' => $user,
-        'accounts' => $accounts['data'] ?? []
-      ];
+    $data = [
+      'user' => $user,
+      'accounts' => $accounts['data'] ?? []
+    ];
 
-      return view('dashboard', $data);
-    } catch (\Exception $e) {
-      return redirect()->to('/')->with('error', 'Error al conectar con Frame.io: ' . $e->getMessage());
-    }
+    return view('dashboard', $data);
   }
 
   public function workspaces($accountId)

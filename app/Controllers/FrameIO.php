@@ -2,9 +2,9 @@
 
 namespace App\Controllers;
 
-use CodeIgniter\Controller;
+use App\Libraries\FrameIoService;
 
-class Auth extends Controller
+class FrameIO extends BaseController
 {
   private $clientId;
   private $clientSecret;
@@ -21,17 +21,20 @@ class Auth extends Controller
     $this->tokenUrl = env('FRAMEIO_TOKEN_URL');
   }
 
+  public function index()
+  {
+    echo "frame io";
+  }
+
   public function login()
   {
-    // Generar state aleatorio para seguridad
     $state = bin2hex(random_bytes(16));
     session()->set('oauth_state', $state);
 
-    // Parámetros para la autorización OAuth2
     $params = [
       'client_id' => $this->clientId,
       'redirect_uri' => $this->redirectUri,
-      'scope' => 'additional_info.roles,email,offline_access,openid,profile',
+      'scope' => 'openid,additional_info.roles,offline_access,email,profile',
       'response_type' => 'code',
       'state' => $state
     ];
@@ -39,27 +42,12 @@ class Auth extends Controller
     $authUrl = $this->authUrl . '?' . http_build_query($params);
 
     return redirect()->to($authUrl);
-
-
-    //
-
-    // Construir URL de autorización de Adobe IMS
-    // $authUrl = 'https://ims-na1.adobelogin.com/ims/authorize/v1?' . http_build_query([
-    //   'client_id' => $this->clientId,
-    //   'redirect_uri' => $this->redirectUri,
-    //   'response_type' => 'code',
-    //   'scope' => 'additional_info.roles,email,offline_access,openid,profile',
-    //   'state' => $state
-    // ]);
-
-    // return redirect()->to($authUrl);
   }
 
   public function callback()
   {
     $request = service('request');
 
-    // Verificar state para prevenir CSRF
     $state = $request->getGet('state');
     if ($state !== session()->get('oauth_state')) {
       return redirect()->to('/')->with('error', 'Estado OAuth inválido');
@@ -70,21 +58,27 @@ class Auth extends Controller
       return redirect()->to('/')->with('error', 'Código de autorización no recibido');
     }
 
-    // Intercambiar código por token de acceso
     $tokenData = $this->getAccessToken($code);
 
     if ($tokenData) {
-      // Guardar tokens en sesión
       session()->set([
         'access_token' => $tokenData['access_token'],
         'refresh_token' => $tokenData['refresh_token'] ?? null,
         'expires_in' => $tokenData['expires_in'] ?? 3600
       ]);
 
-      return redirect()->to('/dashboard')->with('success', 'Autenticación exitosa');
+      echo "<pre>";
+      print_r($tokenData);
+      echo "</pre>";
     }
 
-    return redirect()->to('/')->with('error', 'Error al obtener token de acceso');
+    echo "Error al obtener token de acceso";
+  }
+
+  public function logout()
+  {
+    session()->destroy();
+    return redirect()->to('/')->with('success', 'Sesión cerrada correctamente');
   }
 
   private function getAccessToken($code)
@@ -118,11 +112,5 @@ class Auth extends Controller
 
     log_message('error', 'Error getting access token: ' . $response);
     return false;
-  }
-
-  public function logout()
-  {
-    session()->destroy();
-    return redirect()->to('/')->with('success', 'Sesión cerrada correctamente');
   }
 }
