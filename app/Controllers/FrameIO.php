@@ -50,29 +50,30 @@ class FrameIO extends BaseController
 
     $state = $request->getGet('state');
     if ($state !== session()->get('oauth_state')) {
-      return redirect()->to('/')->with('error', 'Estado OAuth inválido');
+      echo "Estado OAuth inválido";
+      return;
     }
 
     $code = $request->getGet('code');
     if (!$code) {
-      return redirect()->to('/')->with('error', 'Código de autorización no recibido');
+      echo "Código de autorización no recibido";
+      return;
     }
 
     $tokenData = $this->getAccessToken($code);
 
-    if ($tokenData) {
-      session()->set([
-        'access_token' => $tokenData['access_token'],
-        'refresh_token' => $tokenData['refresh_token'] ?? null,
-        'expires_in' => $tokenData['expires_in'] ?? 3600
-      ]);
-
+    if ($tokenData && isset($tokenData['refresh_token'])) {
       echo "<pre>";
       print_r($tokenData);
       echo "</pre>";
-    }
 
-    echo "Error al obtener token de acceso";
+      $frameService = new \App\Libraries\FrameioService();
+      $frameService->saveTokens($tokenData['refresh_token'], $tokenData['access_token'], $tokenData['expires_in']);
+
+      return "Conexion exitosa con Frame.io";
+    } else {
+      echo "Error al obtener token de acceso";
+    }
   }
 
   public function logout()
