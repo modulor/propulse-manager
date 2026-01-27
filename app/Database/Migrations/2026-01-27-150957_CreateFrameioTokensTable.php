@@ -4,7 +4,7 @@ namespace App\Database\Migrations;
 
 use CodeIgniter\Database\Migration;
 
-class CreateUsersRolesTable extends Migration
+class CreateFrameioTokensTable extends Migration
 {
   public function up()
   {
@@ -15,23 +15,33 @@ class CreateUsersRolesTable extends Migration
         'unsigned'       => true,
         'auto_increment' => true,
       ],
-      'rolename' => [
+      'account_email' => [
         'type'       => 'VARCHAR',
         'constraint' => '100',
+        'unique'     => true,
       ],
-      'description' => [
+      'refresh_token' => [
+        'type' => 'TEXT',
+      ],
+      'access_token' => [
         'type' => 'TEXT',
         'null' => true,
       ],
+      'expires_at' => [
+        'type' => 'DATETIME',
+        'null' => true,
+      ],
+      'updated_at' => [
+        'type' => 'DATETIME',
+        'null' => true,
+      ],
     ]);
-
     $this->forge->addKey('id', true);
-
-    $this->forge->createTable('users_roles');
+    $this->forge->createTable('frameio_tokens');
   }
 
   public function down()
   {
-    $this->forge->dropTable('users_roles');
+    $this->forge->dropTable('frameio_tokens');
   }
 }
