@@ -16,7 +16,7 @@ class FrameioService
 
   public function __construct()
   {
-    $this->baseUrl      = env('FRAMEIO_BASE_URL', 'https://api.frame.io/v4');
+    $this->baseUrl      = env('FRAMEIO_BASE_URL');
     $this->clientId     = env('FRAMEIO_CLIENT_ID');
     $this->clientSecret = env('FRAMEIO_CLIENT_SECRET');
     $this->encrypter    = \Config\Services::encrypter();
@@ -165,6 +165,16 @@ class FrameioService
   public function getProjects($accountId, $workspaceId)
   {
     return $this->makeRequest("/accounts/{$accountId}/workspaces/{$workspaceId}/projects");
+  }
+
+  public function getProject($accountId, $projectId)
+  {
+    return $this->makeRequest("/accounts/{$accountId}/projects/{$projectId}");
+  }
+
+  public function getFolders($account_id, $root_folder_id)
+  {
+    return $this->makeRequest("/accounts/{$account_id}/folders/{$root_folder_id}/children?type=folder");
   }
 
   public function getCurrentUser()

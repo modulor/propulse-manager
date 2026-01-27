@@ -13,10 +13,8 @@ class Dashboard extends Controller
 
     $frameio = new FrameioService();
 
-    // Obtener información del usuario
     $user = $frameio->getCurrentUser();
 
-    // Obtener cuentas
     $accounts = $frameio->getAccounts();
 
     $data = [
@@ -36,6 +34,8 @@ class Dashboard extends Controller
       'account_id' => $accountId,
       'workspaces' => $workspaces['data'] ?? []
     ];
+
+    return view('workspaces', $data);
   }
 
   public function workspace($accountId, $workspaceId)
@@ -44,12 +44,40 @@ class Dashboard extends Controller
     $projects = $frameio->getProjects($accountId, $workspaceId);
 
     $data = [
+      'account_id' => $accountId,
       'workspace_id' => $workspaceId,
       'projects' => $projects['data'] ?? []
     ];
 
-    echo "<pre>";
-    print_r($data);
-    echo "</pre>";
+    return view('workspace', $data);
+  }
+
+  public function project($accountId, $workspaceId, $projectId)
+  {
+    $frameio = new FrameioService();
+    $project = $frameio->getProject($accountId, $projectId);
+
+    $data = [
+      'project' => $project ?? [],
+      'account_id' => $accountId,
+      'workspace_id' => $workspaceId,
+      'project_id' => $projectId,
+    ];
+
+    return view('project', $data);
+  }
+
+  public function folders($accountId, $rootFolderId)
+  {
+    $frameio = new FrameioService();
+    $folders = $frameio->getFolders($accountId, $rootFolderId);
+
+    $data = [
+      'account_id' => $accountId,
+      'root_folder_id' => $rootFolderId,
+      'folders' => $folders['data'] ?? []
+    ];
+
+    return view('folders', $data);
   }
 }

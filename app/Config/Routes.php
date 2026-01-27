@@ -15,3 +15,5 @@ $routes->get('/frameio/logout', 'FrameIO::logout');
 $routes->get('/dashboard', 'Dashboard::index');
 $routes->get('/dashboard/workspaces/(:segment)', 'Dashboard::workspaces/$1');
 $routes->get('/dashboard/workspace/(:segment)/(:segment)', 'Dashboard::workspace/$1/$2');
+$routes->get('/dashboard/project/(:segment)/folders/(:segment)', 'Dashboard::folders/$1/$2');
+$routes->get('/dashboard/project/(:segment)/(:segment)/(:segment)', 'Dashboard::project/$1/$2/$3');
