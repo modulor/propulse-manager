@@ -12,7 +12,7 @@ class FrameioService
   private $clientSecret;
   private $encrypter;
   private $tokenModel;
-  private $targetEmail = 'hola@magianegravfx.com'; // Cuenta maestra
+  private $targetEmail = 'hola@magianegravfx.com';
 
   public function __construct()
   {
@@ -23,9 +23,6 @@ class FrameioService
     $this->tokenModel   = new FrameioTokenModel();
   }
 
-  /**
-   * Realiza una petición a la API manejando la renovación de tokens automáticamente
-   */
   public function makeRequest($endpoint, $method = 'GET', $data = null)
   {
     $token = $this->getValidAccessToken();
@@ -36,7 +33,7 @@ class FrameioService
     $headers = [
       'Authorization: Bearer ' . $token,
       'Content-Type: application/json',
-      'x-api-version: 2024-01-01' // Requerido para API v4
+      'x-api-version: 2024-01-01'
     ];
 
     curl_setopt_array($curl, [
@@ -57,7 +54,6 @@ class FrameioService
 
     $decodedResponse = json_decode($response, true);
 
-    // Si el token falló (401), invalidamos el token actual e intentamos una vez más
     if ($httpCode === 401) {
       log_message('debug', 'Token expirado detectado en petición. Intentando refrescar...');
       return $this->retryAfterRefresh($endpoint, $method, $data);
@@ -92,9 +88,6 @@ class FrameioService
 
     return $this->tokenModel->insert($data);
   }
-  /**
-   * Lógica para obtener el token: de DB si es válido, o refrescarlo si expiró
-   */
   private function getValidAccessToken()
   {
     $record = $this->tokenModel->where('account_email', $this->targetEmail)->first();
@@ -103,19 +96,14 @@ class FrameioService
       throw new \Exception('No hay credenciales configuradas. Realiza el Login Único primero.');
     }
 
-    // Si el access_token aún es válido (damos un margen de 1 minuto)
     if (!empty($record['access_token']) && strtotime($record['expires_at']) > (time() + 60)) {
       return $this->decryptValue($record['access_token']);
     }
 
-    // Si no es válido, usamos el refresh_token para obtener uno nuevo
     $refreshToken = $this->decryptValue($record['refresh_token']);
     return $this->refreshAndSaveTokens($refreshToken);
   }
 
-  /**
-   * Intercambia el Refresh Token por un nuevo par de tokens en Adobe IMS
-   */
   private function refreshAndSaveTokens($refreshToken)
   {
     $client = \Config\Services::curlrequest();
@@ -136,13 +124,11 @@ class FrameioService
         throw new \Exception('Adobe no devolvió un access_token válido.');
       }
 
-      // Actualizamos la base de datos con los nuevos valores
       $update = [
         'access_token' => $this->encryptValue($data['access_token']),
         'expires_at'   => date('Y-m-d H:i:s', time() + $data['expires_in']),
       ];
 
-      // Adobe puede rotar el refresh_token (enviarte uno nuevo), lo guardamos si viene
       if (isset($data['refresh_token'])) {
         $update['refresh_token'] = $this->encryptValue($data['refresh_token']);
       }
@@ -156,22 +142,15 @@ class FrameioService
     }
   }
 
-  /**
-   * Caso de borde: Si el token parecía válido pero la API devolvió 401
-   */
   private function retryAfterRefresh($endpoint, $method, $data)
   {
     $record = $this->tokenModel->where('account_email', $this->targetEmail)->first();
     $refreshToken = $this->decryptValue($record['refresh_token']);
 
-    // Forzamos el refresco
     $this->refreshAndSaveTokens($refreshToken);
 
-    // Reintentamos la petición original
     return $this->makeRequest($endpoint, $method, $data);
   }
-
-  // --- MÉTODOS DE UTILIDAD PARA EL API ---
 
   public function getAccounts()
   {
@@ -192,8 +171,6 @@ class FrameioService
   {
     return $this->makeRequest('/me');
   }
-
-  // --- ENCRIPTACIÓN ---
 
   private function encryptValue($value)
   {
